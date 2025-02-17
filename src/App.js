@@ -1,24 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
-
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import HomePage from './components/HomePage';
+import CollegeFilterPage from './components/CollegeFilterPage';
+import UserRegistrationPage from './components/UserRegistrationPage';
+import PredictionPage from './components/PredictionPage';
+import './index.css';
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div id="root">
+        <header>
+          <h1>College Predictor System</h1>
+        </header>
+
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/filter-colleges" element={<CollegeFilterPage />} />
+            <Route path="/register" element={<UserRegistrationPage />} />
+            <Route path="/predict" element={<PredictionPage />} />
+          </Routes>
+        </main>
+
+        {/* ✅ Fix Footer */}
+        <footer>
+          <p>&copy; 2025 College Predictor</p>
+        </footer>
+      </div>
+    </Router>
   );
 }
 
