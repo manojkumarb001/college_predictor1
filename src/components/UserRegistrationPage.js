@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './UserRegistrationPage.css';
 
 function UserRegistrationPage() {
   const [userData, setUserData] = useState({
@@ -20,79 +21,102 @@ function UserRegistrationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    console.log("Sending Data:", userData);
+  
     try {
-      await axios.post('http://localhost:5000/register', userData);
-      setMessage('User registered successfully!');
+      const response = await axios.post("http://localhost:5000/register", userData, {
+        headers: { "Content-Type": "application/json" },
+      });
+      setMessage("User registered successfully!");
+      console.log("Response:", response.data);
     } catch (err) {
-      setMessage('Registration failed');
+      setMessage("Registration failed");
+      console.error("Error:", err.response?.data || err.message);
     }
   };
 
   return (
-    <div>
+    <div className="registration-container">
       <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          value={userData.name}
-          onChange={handleChange}
-          placeholder="Name"
-          required
-        />
-        <input
-          type="number"
-          name="age"
-          value={userData.age}
-          onChange={handleChange}
-          placeholder="Age"
-          required
-        />
-        <input
-          type="text"
-          name="gender"
-          value={userData.gender}
-          onChange={handleChange}
-          placeholder="Gender"
-          required
-        />
-        <input
-          type="text"
-          name="school"
-          value={userData.school}
-          onChange={handleChange}
-          placeholder="School Name"
-          required
-        />
-        <input
-          type="date"
-          name="dob"
-          value={userData.dob}
-          onChange={handleChange}
-          placeholder="DOB"
-          required
-        />
-        <input
-          type="text"
-          name="mobile"
-          value={userData.mobile}
-          onChange={handleChange}
-          placeholder="Mobile Number"
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          value={userData.email}
-          onChange={handleChange}
-          placeholder="Email"
-          required
-        />
+      <form className="registration-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <input
+            type="text"
+            name="name"
+            value={userData.name}
+            onChange={handleChange}
+            placeholder="Name"
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <input
+            type="text"
+            name="gender"
+            value={userData.gender}
+            onChange={handleChange}
+            placeholder="Gender"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            name="mobile"
+            value={userData.mobile}
+            onChange={handleChange}
+            placeholder="Mobile Number"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            name="school"
+            value={userData.school}
+            onChange={handleChange}
+            placeholder="School Name"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <input
+            type="date"
+            name="dob"
+            value={userData.dob}
+            onChange={handleChange}
+            placeholder="DOB"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="number"
+            name="age"
+            value={userData.age}
+            onChange={handleChange}
+            placeholder="Age"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="email"
+            name="email"
+            value={userData.email}
+            onChange={handleChange}
+            placeholder="Email"
+            required
+          />
+        </div>
+        
+        
         <button type="submit">Register</button>
       </form>
 
-      {message && <p>{message}</p>}
+      {message && <p className="form-message">{message}</p>}
     </div>
   );
 }

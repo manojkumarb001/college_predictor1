@@ -1,179 +1,164 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Select from 'react-select'; // ✅ Import react-select for searchable dropdowns
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-function PredictionPage() {
-  const [formData, setFormData] = useState({
-    maths: '',
-    physics: '',
-    chemistry: '',
-    category: '',
-    branch: '',
-    district: ''
+const PredictionPage = () => {
+  const [filters, setFilters] = useState({
+    categories: [],
+    branches: [],
+    districts: [],
   });
 
-  const [filters, setFilters] = useState({ categories: [], branches: [], districts: [] });
-  const [prediction, setPrediction] = useState([]);
-  const [cutoff, setCutoff] = useState(null);
-  const [minCutoff, setMinCutoff] = useState('');
-  const [error, setError] = useState('');
-  const [showMinCutoff, setShowMinCutoff] = useState(false);
+  const [formData, setFormData] = useState({
+    maths: "",
+    physics: "",
+    chemistry: "",
+    cutoff: "",
+    min_cutoff: "",
+    category: "",
+    branch: "",
+    district: "",
+  });
 
-  // ✅ Fetch Categories, Branches & Districts from Backend
+  const [predictions, setPredictions] = useState([]);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/filters');
-        
-        if (response.data) {
-          // ✅ Ensure Data is in Correct Format
-          const categories = response.data.categories.map(item => ({
-            value: item.value, label: item.label
-          }));
-
-          const branches = response.data.branches.map(item => ({
-            value: item.value, label: item.label
-          }));
-
-          const districts = response.data.districts.map(item => ({
-            value: item.value, label: item.label
-          }));
-
-          setFilters({ categories, branches, districts });
-        } else {
-          console.error("⚠️ No data received from API");
-        }
-      } catch (err) {
-        console.error("❌ Error fetching filter options:", err);
-        setError("Failed to load filter options.");
-      }
-    };
-
     fetchFilters();
   }, []);
 
-  // ✅ Handle input field changes
-  const handleChange = (e) => {
+  const fetchFilters = async () => {
+    try {
+      const categoryResponse = await axios.get("http://localhost:5000/categories");
+      const branchResponse = await axios.get("http://localhost:5000/branches");
+      const districtResponse = await axios.get("http://localhost:5000/districts");
+
+      setFilters({
+        categories: categoryResponse.data.categories || [],
+        branches: branchResponse.data.branches || [],
+        districts: districtResponse.data.districts || [],
+      });
+    } catch (error) {
+      console.error("❌ Error fetching filters:", error);
+    }
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+    const updatedFormData = { ...formData, [name]: value };
 
-  // ✅ Handle dropdown selections
-  const handleSelectChange = (selectedOption, field) => {
-    setFormData({ ...formData, [field]: selectedOption.value });
-  };
-
-  // ✅ Handle form submission for cutoff calculation
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const maths = parseFloat(formData.maths);
-    const physics = parseFloat(formData.physics);
-    const chemistry = parseFloat(formData.chemistry);
-
-    if (isNaN(maths) || isNaN(physics) || isNaN(chemistry)) {
-      setError('Please enter valid numeric marks.');
-      return;
+    if (["maths", "physics", "chemistry"].includes(name)) {
+      const maths = parseFloat(updatedFormData.maths) || 0;
+      const physics = parseFloat(updatedFormData.physics) || 0;
+      const chemistry = parseFloat(updatedFormData.chemistry) || 0;
+      updatedFormData.cutoff = maths + physics / 2 + chemistry / 2;
     }
 
-    const calculatedCutoff = maths + (physics / 2) + (chemistry / 2);
-    setCutoff(calculatedCutoff);
-    setShowMinCutoff(true);
+    setFormData(updatedFormData);
   };
 
-  // ✅ Handle prediction API request
   const handlePredict = async () => {
-    if (!minCutoff) {
-      setError("Please set a minimum cutoff before predicting.");
+    if (!formData.min_cutoff || isNaN(parseFloat(formData.min_cutoff))) {
+      setError("⚠️ Please enter a valid minimum cutoff.");
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/predict', { 
-        ...formData, 
-        min_cutoff: parseFloat(minCutoff),
-        max_cutoff: cutoff
+      const response = await axios.post("http://localhost:5000/predict", {
+        min_cutoff: parseFloat(formData.min_cutoff),
+        max_cutoff: formData.cutoff,
+        category: formData.category,
+        branch: formData.branch,
+        district: formData.district,
       });
 
-      setPrediction(response.data);
-      setError('');
-    } catch (err) {
-      console.error('Error fetching prediction:', err);
-      setError('Failed to fetch predictions.');
+      setPredictions(response.data.predicted_colleges || []);
+      setError("");
+    } catch (error) {
+      console.error("❌ Error fetching prediction:", error);
+      setError("Failed to fetch predictions.");
     }
   };
 
   return (
     <div>
-      <h2>College Prediction</h2>
-
-      {/* ✅ Display API Fetch Error */}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <h2>College Predictor</h2>
       
-      {/* ✅ Form for Input */}
-      <form onSubmit={handleSubmit}>
-        <input type="number" name="maths" placeholder="Maths Marks" value={formData.maths} onChange={handleChange} required />
-        <input type="number" name="physics" placeholder="Physics Marks" value={formData.physics} onChange={handleChange} required />
-        <input type="number" name="chemistry" placeholder="Chemistry Marks" value={formData.chemistry} onChange={handleChange} required />
+      <label>Maths:</label>
+      <input type="number" name="maths" value={formData.maths} onChange={handleInputChange} />
 
-        {/* ✅ Dynamic Searchable Dropdowns */}
-        <label>Category:</label>
-        <Select options={filters.categories} onChange={(selectedOption) => handleSelectChange(selectedOption, 'category')} placeholder="Select Category" />
+      <label>Physics:</label>
+      <input type="number" name="physics" value={formData.physics} onChange={handleInputChange} />
 
-        <label>Branch:</label>
-        <Select options={filters.branches} onChange={(selectedOption) => handleSelectChange(selectedOption, 'branch')} placeholder="Select Branch" />
+      <label>Chemistry:</label>
+      <input type="number" name="chemistry" value={formData.chemistry} onChange={handleInputChange} />
 
-        <label>District:</label>
-        <Select options={filters.districts} onChange={(selectedOption) => handleSelectChange(selectedOption, 'district')} placeholder="Select District" />
+      <label>Calculated Cutoff:</label>
+      <input type="number" value={formData.cutoff} disabled />
 
-        <button type="submit">Calculate Cutoff</button>
-      </form>
+      <label>Min Cutoff:</label>
+      <input type="number" name="min_cutoff" value={formData.min_cutoff} onChange={handleInputChange} />
 
-      {cutoff && <h3>Your Calculated Cutoff: {cutoff}</h3>}
+      <label>Category:</label>
+      <select name="category" value={formData.category} onChange={handleInputChange}>
+        <option value="">Select Category</option>
+        {filters.categories.map((cat, index) => (
+          <option key={index} value={cat}>{cat}</option>
+        ))}
+      </select>
 
-      {showMinCutoff && (
-        <div>
-          <p><strong>Note:</strong> Adjust the minimum cutoff range to filter colleges.</p>
-          <input 
-            type="number" 
-            placeholder="Enter Minimum Cutoff" 
-            value={minCutoff} 
-            onChange={(e) => setMinCutoff(e.target.value)}
-            required
-          />
-          <button onClick={handlePredict}>Predict Colleges</button>
-        </div>
-      )}
+      <label>Branch:</label>
+      <select name="branch" value={formData.branch} onChange={handleInputChange}>
+        <option value="">Select Branch</option>
+        {filters.branches.map((branch, index) => (
+          <option key={index} value={branch}>{branch}</option>
+        ))}
+      </select>
 
-      {/* ✅ Display Predicted Colleges */}
-      {prediction.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th>College Name</th>
-              <th>Branch</th>
-              <th>District</th>
-              <th>Category</th>
-              <th>Average Cutoff</th>
-            </tr>
-          </thead>
-          <tbody>
-            {prediction.map((college, index) => (
+      <label>District:</label>
+      <select name="district" value={formData.district} onChange={handleInputChange}>
+        <option value="">Select District</option>
+        {filters.districts.map((district, index) => (
+          <option key={index} value={district}>{district}</option>
+        ))}
+      </select>
+
+      <button onClick={handlePredict}>Predict Colleges</button>
+
+      <h3>Predicted Colleges:</h3>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <table border="1">
+        <thead>
+          <tr>
+            <th>College Name</th>
+            <th>College Code</th>
+            <th>Branch</th>
+            <th>Average Cutoff</th>
+            <th>District</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody>
+          {predictions.length > 0 ? (
+            predictions.map((college, index) => (
               <tr key={index}>
                 <td>{college.college_name}</td>
-                <td>{college.branch}</td>
+                <td>{college.college_code}</td>
+                <td>{college.branchname}</td>
+                <td>{college.average_cutoff}</td>
                 <td>{college.district}</td>
                 <td>{college.community}</td>
-                <td>{college.average_cutoff}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>No predictions available. Try different inputs.</p>
-      )}
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6" style={{ textAlign: "center" }}>No predictions found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
 
 export default PredictionPage;
