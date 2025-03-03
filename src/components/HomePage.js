@@ -9,7 +9,7 @@ function HomePage() {
       <Box textAlign="center" mt={5}>
         <img src="/logo/logo.jpg" alt="College Predictor Logo" style={{ width: 120, height: 120 }} />
         <Typography variant="h3" fontWeight="bold" mt={2}>
-          College Predictor System
+        ZARA College Predictor System
         </Typography>
         <Typography variant="h6" color="textSecondary" mt={1}>
           The ultimate tool to predict which college you can get into based on your marks and preferences.
