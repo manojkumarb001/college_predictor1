@@ -47,9 +47,9 @@ const PredictionPage = () => {
 
   const fetchFilters = async () => {
     try {
-      const categoryResponse = await axios.get("http://127.0.0.1:5000/categories");
-      const branchResponse = await axios.get("http://127.0.0.1:5000/branches");
-      const districtResponse = await axios.get("http://127.0.0.1:5000/districts");
+      const categoryResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/categories`);
+      const branchResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/branches`);
+      const districtResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/districts`);
 
       console.log("Category Response:", categoryResponse.data);
       console.log("Branch Response:", branchResponse.data);
@@ -92,7 +92,7 @@ const PredictionPage = () => {
 
     try {
       console.log("Sending request with:", formData);
-      const response = await axios.post("http://127.0.0.1:5000/predict", {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/predict`, {
         min_cutoff: parseFloat(formData.min_cutoff),
         max_cutoff: parseFloat(formData.cutoff),
         category: formData.category || "General",
